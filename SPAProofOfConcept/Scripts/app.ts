@@ -6,47 +6,61 @@
     routeNames: Array<string>;
 }
 
-
-function makeDataTable($element: JQuery, usePaging: boolean): GoodDataTable {
-    var options: DataTables.Settings = {
-        data: testData,
+class BusStopsTable {
+    private dataTable: DataTables.DataTable;
+    private readOnlyOptions: DataTables.Settings = {
+        data: this.busStops,
         columns: [
             { data: "id", name: "Stop ID" },
             { data: "name", name: "Stop Name" },
             { data: "lat", name: "Latitude" },
             { data: "lng", name: "Longitude" }
         ],
-        paging: usePaging
+        paging: true
     };
-    var dataTable = <GoodDataTable>$element.DataTable(options);
-    dataTable.readOnlyOptions = options;
-    return dataTable;
-};
 
-interface GoodDataTable extends DataTables.DataTable {
-    readOnlyOptions: DataTables.Settings;
+    constructor(private table: HTMLElement, private busStops: Array<BusStop>) {
+        this.dataTable = this.makeDataTable($(table));
+    }
+
+    togglePaging() {
+        this.readOnlyOptions.paging = !this.readOnlyOptions.paging;
+        this.dataTable.destroy(false);
+        this.dataTable = this.makeDataTable($(this.table));
+    }
+
+    scrambleIDs() {
+        for (var i = 0; i < this.busStops.length; i++) {
+            this.busStops[i].id = parseInt(this.busStops[i].id.toString().split("").reverse().join(""));
+        }
+        this.reloadData();
+    }
+
+    reloadData() {
+        this.dataTable.clear();
+        this.dataTable.rows.add(this.busStops);
+        this.dataTable.draw(false);
+    }
+
+    setBusStops(busStops: Array<BusStop>) {
+        this.readOnlyOptions.data = busStops;
+        this.makeDataTable($(this.table));
+    }
+
+    makeDataTable($element: JQuery): DataTables.DataTable {
+        var dataTable = $element.DataTable(this.readOnlyOptions);
+        return dataTable;
+    };
+
 }
 
 var tableHTML: string;
-var $dataTable: GoodDataTable;
+var busStopsTable: BusStopsTable;
 $(document).ready(() => {
     tableHTML = $("#content")[0].outerHTML;
-    $dataTable = makeDataTable($("#content"), true);
+    busStopsTable = new BusStopsTable(document.getElementById("content"), testData);
 
-    $("#button").click(function () {
-        var isPaging = $dataTable.readOnlyOptions.paging;
-        $dataTable.destroy(true);
-        var $table: JQuery = $(tableHTML).insertAfter("#button");
-        $dataTable = makeDataTable($table, !isPaging);
-    });
+    $("#button").click(() => busStopsTable.togglePaging());
 
-    setInterval(function () {
-        for (var i = 0; i < testData.length; i++) {
-            testData[i].id = parseInt(testData[i].id.toString().split("").reverse().join(""));
-        }
-        $dataTable.clear()
-        $dataTable.rows.add(testData);
-        $dataTable.draw(false);
-        
-    }, 5000);
+    setInterval(() => busStopsTable.scrambleIDs(), 5000);
 });
