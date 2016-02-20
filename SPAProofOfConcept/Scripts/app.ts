@@ -6,15 +6,29 @@
     routeNames: Array<string>;
 }
 
+function makeComplexCell(data: BusStop) {
+    const mySpecialBlueLines = data.routeNames.map(row => "<span style='color: blue;'>" + row + "</span>").join("<br>");
+    const link = "<a href='https://corvallisb.us/#" + data.id + "' target='_blank'>" + mySpecialBlueLines + "</a>";
+    const dif1 = 45 + Math.floor(Math.random() * 10);
+    const dif2 = 45 + Math.floor(Math.random() * 10);
+    return link + "<br>" + "<img src='http://www.fillmurray.com/" + dif1 + "/" + dif2 + "'></img>";
+}
+
 class BusStopsTable {
     private dataTable: DataTables.DataTable;
     private readOnlyOptions: DataTables.Settings = {
         data: this.busStops,
         columns: [
-            { data: "id", name: "Stop ID" },
-            { data: "name", name: "Stop Name" },
-            { data: "lat", name: "Latitude" },
-            { data: "lng", name: "Longitude" }
+            { data: "id", title: "Stop ID" },
+            { data: "name", title: "Stop Name" },
+            { data: "lat", title: "Latitude" },
+            { data: "lng", title: "Longitude" },
+            {
+                data: "routeNames", title: "Ba'al Names",
+                render: (_, __, stop: BusStop) => {
+                    return makeComplexCell(stop);
+                }
+            }
         ],
         paging: true
     };
@@ -30,10 +44,10 @@ class BusStopsTable {
     }
 
     scrambleIDs() {
-        for (var i = 0; i < this.busStops.length; i++) {
-            this.busStops[i].id = parseInt(this.busStops[i].id.toString().split("").reverse().join(""));
-        }
-        this.reloadData();
+        //for (var i = 0; i < this.busStops.length; i++) {
+        //    this.busStops[i].id = parseInt(this.busStops[i].id.toString().split("").reverse().join(""));
+        //}
+        //this.reloadData();
     }
 
     reloadData() {
